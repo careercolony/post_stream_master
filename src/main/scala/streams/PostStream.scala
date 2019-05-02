@@ -3,7 +3,7 @@ package streams
 import akka.actor._
 import config.Application
 import kafka.serializer.StringDecoder
-import model.Post
+import model.Feed
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
@@ -47,13 +47,14 @@ object PostStream extends App with Application {
 
   val post_msgs = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, brokersMap, postTopic)
 
-
+  
   val postStream = post_msgs
     .map(x => {
       implicit val formats = DefaultFormats
-      import model.JsonRepo.PostUpdateRequestFormats
+      import model.JsonRepo.FeedRequestFormats
+      
       println("data from post topic:" + x._2)
-      x._2.parseJson.convertTo[Post].toJson
+      x._2.parseJson.convertTo[Feed].toJson
     })
 
   postStream.foreachRDD((trdd: RDD[JsValue]) => {
@@ -64,3 +65,4 @@ object PostStream extends App with Application {
   ssc.awaitTermination()
 
 }
+
